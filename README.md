@@ -1,9 +1,10 @@
 
 <!-- README.md is generated from README.Rmd. Please edit that file -->
 
-# ROSeq - A rank based approach to modeling gene expression
+# ROSeq
 
-Author: Krishan Gupta
+Modeling expression ranks for noise-tolerant differential expression
+analysis of scRNA-Seq data.
 
 ## Introduction
 
@@ -34,8 +35,12 @@ install_github('krishan57gupta/ROSeq')
 
 This vignette uses a tung dataset already inbuilt in same package, to
 demonstrate a standard pipeline. This vignette can be used as a tutorial
-as well. Ref: Tung, P.-Y.et al.Batch effects and the effective design of
-single-cell geneexpression studies.Scientific reports7, 39921 (2017).
+as well.
+
+#### Reference of Tung data:
+
+Tung, P.-Y.et al.Batch effects and the effective design of single-cell
+geneexpression studies.Scientific reports7, 39921 (2017).
 
 ## Example
 
@@ -48,7 +53,7 @@ library(edgeR)
 library(limma)
 ```
 
-## Loading tung dataset
+### Loading tung dataset
 
 ``` r
 samples<-list()
@@ -69,31 +74,61 @@ samples$count[1:5,1:5]
 #> ENSG00000187583              0
 ```
 
-## Data Preprocessing: cells and genes filtering then voom transformation
+### Data Preprocessing:
 
-## after TMM normalization
+#### Cells and genes filtering then voom transformation after TMM normalization
+
+First convert matrix to numeric values, then cell filtering, gene
+filtering. After all finally normalization and then tranformation. Note:
+For filtering, normalization and tranfromation other methods can be
+used, but recomended as shown in example.
 
 ``` r
-samples$count=apply(samples$count,2,function(x) as.numeric(x))
-gkeep <- apply(samples$count,1,function(x) sum(x>0)>5)
+gene_names<-rownames(samples$count)
+samples$count<-apply(samples$count,2,function(x) as.numeric(x))
+rownames(samples$count)<-gene_names
+samples$count<-samples$count[,colSums(samples$count> 0) > 2000]
+gkeep<-apply(samples$count,1,function(x) sum(x>2)>=3)
 samples$count<-samples$count[gkeep,]
 samples$count<-limma::voom(ROSeq::TMMnormalization(samples$count))
 ```
 
-## ROSeq calling
+### ROSeq calling:
+
+Requires a matrix with row as genes and columns and cells, and also
+condition of cells, means lables for each cell. numCores can be set as
+per number of core/cpu
+avaialble.
 
 ``` r
-output<-ROSeq(countData=samples$count, condition = samples$group, numCores=1)
+output<-ROSeq(countData=samples$count$E, condition = samples$group, numCores=1)
 ```
 
-## Showing results are in the form of pval, padj and log2FC
+### Showing results are in the form of pVals, pAdj and log2FC
+
+##### p\_Vals : p\_value (unadjusted)
+
+##### p\_Adj : Adjusted p-value, based on FDR method
+
+##### log2FC : log fold-chage of the average expression between the two groups,
+
+#### Note:
+
+Positive values show feature is highly enriched in the first group.
 
 ``` r
 output[1:5,]
-#>             pVals        pAdj      log2FC
-#> [1,] 0.2912653242 0.571901046 -0.03545082
-#> [2,] 0.0003176301 0.006390721 -0.07956817
-#> [3,] 0.6497064020 0.831221721  0.03307939
-#> [4,] 0.0554763840 0.198719347 -0.08567317
-#> [5,] 0.0077068770 0.045497442 -0.05582549
+#>                     pVals      pAdj      log2FC
+#> ENSG00000237683 0.6741425 0.9321651 -0.02240619
+#> ENSG00000188976 0.7484244 0.9426495  0.03652966
+#> ENSG00000187608 0.2282451 0.8481636  0.15428280
+#> ENSG00000188157 0.5138812 0.9082800 -0.06789033
+#> ENSG00000131591 0.1235577 0.7438811 -0.07333149
 ```
+
+## Publication (preprint available at bioRxiv):
+
+Gupta, K., Lalit, M., Biswas, A., Maulik, U., Bandyopadhyay, S., Ahuja,
+G., Ghosh, A., and Sengupta, D., 2020. ROSeq: Noise-tolerant
+differential expression analysis of scRNA-Seq data. DOI:
+<https://doi.org/10.1101/374025>

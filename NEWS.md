@@ -1,6 +1,7 @@
-## version 0.99.23
+## version 1.1.4
 
---- updated authors names
+--- updated vignettes and readme file and example in main file
+--- Publication (Preprint available at BioRxiv): is added
 
 ## version 0.99.22
 

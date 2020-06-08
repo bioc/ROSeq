@@ -2,8 +2,8 @@
 % Please edit documentation in R/ROSeq.R
 \name{ROSeq}
 \alias{ROSeq}
-\title{A rank based approach to modeling gene expression with filtered
-and normalized read count matrix}
+\title{Modeling expression ranks for noise-tolerant differential 
+expression analysis of scRNA-Seq data}
 \usage{
 ROSeq(countData, condition, numCores = 1)
 }
@@ -28,10 +28,13 @@ countData<-list()
 countData$count<-ROSeq::L_Tung_single$NA19098_NA19101_count
 countData$group<-ROSeq::L_Tung_single$NA19098_NA19101_group
 head(countData$count)
+gene_names<-rownames(countData$count)
 countData$count<-apply(countData$count,2,function(x) as.numeric(x))
-g_keep <- apply(countData$count,1,function(x) sum(x>0)>5)
+rownames(countData$count)<-gene_names
+countData$count<-countData$count[,colSums(countData$count> 0) > 2000]
+g_keep <- apply(countData$count,1,function(x) sum(x>2)>=3)
 countData$count<-countData$count[g_keep,]
 countData$count<-limma::voom(ROSeq::TMMnormalization(countData$count))
-output<-ROSeq(countData=countData$count, condition = countData$group)
+output<-ROSeq(countData=countData$count$E, condition = countData$group)
 output
 }
