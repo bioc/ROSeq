@@ -1,4 +1,4 @@
-## version 1.2.1
+## version 1.3.1
 
 --- updated vignettes and readme file and example in main file
 --- Publication (Preprint available at BioRxiv): is added
